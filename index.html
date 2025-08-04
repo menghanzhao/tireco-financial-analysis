@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tire Recycling Financial Analysis Tool</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Tire Recycling Financial Analysis Tool</h1>
+            <p>Interactive swim lane diagram with cost analysis and multi-scenario planning</p>
+        </header>
+
+        <div class="controls">
+            <div class="control-group">
+                <label for="scenarioSelect">Scenario:</label>
+                <select id="scenarioSelect">
+                    <option value="baseline">Current Process (Baseline)</option>
+                    <option value="proposed">Proposed Process</option>
+                    <option value="custom">Custom Process</option>
+                </select>
+            </div>
+            <div class="control-group">
+                <label for="throughput">Daily Throughput (tons):</label>
+                <input type="number" id="throughput" value="10" min="1" max="100">
+            </div>
+            <div class="control-group">
+                <button id="addStep">Add Process Step</button>
+                <button id="exportDiagram">Export Diagram</button>
+                <button id="compareScenarios">Compare Scenarios</button>
+            </div>
+        </div>
+
+        <div class="swim-lane-container">
+            <h2>Process Flow Diagram</h2>
+            <div id="swimLane" class="swim-lane">
+                <!-- Process steps will be dynamically generated here -->
+            </div>
+        </div>
+
+        <div class="cost-analysis">
+            <div class="cost-summary">
+                <h3>Cost Summary</h3>
+                <div class="summary-cards">
+                    <div class="cost-card">
+                        <h4>Total Daily Cost</h4>
+                        <span id="totalDailyCost">$0</span>
+                    </div>
+                    <div class="cost-card">
+                        <h4>Cost Per Ton</h4>
+                        <span id="costPerTon">$0</span>
+                    </div>
+                    <div class="cost-card">
+                        <h4>Annual Cost</h4>
+                        <span id="annualCost">$0</span>
+                    </div>
+                    <div class="cost-card">
+                        <h4>Break-even Revenue</h4>
+                        <span id="breakEvenRevenue">$0</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="charts-container">
+                <div class="chart-wrapper">
+                    <h3>Cost Breakdown by Process Step</h3>
+                    <canvas id="costBreakdownChart"></canvas>
+                </div>
+                <div class="chart-wrapper">
+                    <h3>Cost vs Revenue Analysis</h3>
+                    <canvas id="revenueChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="scenario-comparison" id="comparisonSection" style="display: none;">
+            <h3>Scenario Comparison</h3>
+            <div class="comparison-table">
+                <table id="comparisonTable">
+                    <thead>
+                        <tr>
+                            <th>Metric</th>
+                            <th>Baseline</th>
+                            <th>Proposed</th>
+                            <th>Difference</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="process-editor" id="processEditor" style="display: none;">
+            <h3>Edit Process Step</h3>
+            <form id="stepForm">
+                <div class="form-group">
+                    <label for="stepName">Step Name:</label>
+                    <input type="text" id="stepName" required>
+                </div>
+                <div class="form-group">
+                    <label for="stepDepartment">Department:</label>
+                    <select id="stepDepartment">
+                        <option value="collection">Collection</option>
+                        <option value="transportation">Transportation</option>
+                        <option value="processing">Processing</option>
+                        <option value="separation">Separation</option>
+                        <option value="quality">Quality Control</option>
+                        <option value="packaging">Packaging</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="equipmentCost">Equipment Cost ($):</label>
+                    <input type="number" id="equipmentCost" min="0" step="0.01">
+                </div>
+                <div class="form-group">
+                    <label for="laborCost">Daily Labor Cost ($):</label>
+                    <input type="number" id="laborCost" min="0" step="0.01">
+                </div>
+                <div class="form-group">
+                    <label for="energyCost">Daily Energy Cost ($):</label>
+                    <input type="number" id="energyCost" min="0" step="0.01">
+                </div>
+                <div class="form-group">
+                    <label for="maintenanceCost">Daily Maintenance Cost ($):</label>
+                    <input type="number" id="maintenanceCost" min="0" step="0.01">
+                </div>
+                <div class="form-group">
+                    <label for="duration">Duration (hours):</label>
+                    <input type="number" id="duration" min="0" step="0.1">
+                </div>
+                <div class="form-buttons">
+                    <button type="submit">Save Step</button>
+                    <button type="button" id="cancelEdit">Cancel</button>
+                    <button type="button" id="deleteStep">Delete Step</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
