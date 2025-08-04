@@ -2,12 +2,13 @@ class TireRecyclingAnalyzer {
     constructor() {
         this.baselineProcess = this.createBaselineProcess();
         this.proposedProcess = this.createProposedProcess();
-        this.customProcess = [...this.baselineProcess];
+        this.customScenarios = this.loadCustomScenarios();
         this.currentScenario = 'baseline';
         this.throughput = 10; // tons per day
         this.currentEditingStep = null;
         
         this.initializeEventListeners();
+        this.populateScenarioDropdown();
         this.renderSwimLane();
         this.updateCostAnalysis();
         this.renderCharts();
@@ -221,12 +222,55 @@ class TireRecyclingAnalyzer {
         ];
     }
 
+    loadCustomScenarios() {
+        try {
+            const saved = localStorage.getItem('tireRecyclingScenarios');
+            return saved ? JSON.parse(saved) : {};
+        } catch (error) {
+            console.error('Error loading scenarios:', error);
+            return {};
+        }
+    }
+
+    saveCustomScenarios() {
+        try {
+            localStorage.setItem('tireRecyclingScenarios', JSON.stringify(this.customScenarios));
+        } catch (error) {
+            console.error('Error saving scenarios:', error);
+        }
+    }
+
     getCurrentProcess() {
         switch (this.currentScenario) {
             case 'baseline': return this.baselineProcess;
             case 'proposed': return this.proposedProcess;
-            case 'custom': return this.customProcess;
-            default: return this.baselineProcess;
+            default: 
+                return this.customScenarios[this.currentScenario]?.process || this.baselineProcess;
+        }
+    }
+
+    populateScenarioDropdown() {
+        const select = document.getElementById('scenarioSelect');
+        const currentValue = select.value;
+        
+        // Clear existing options except baseline and proposed
+        select.innerHTML = `
+            <option value="baseline">Current Process (Baseline)</option>
+            <option value="proposed">Proposed Process</option>
+        `;
+        
+        // Add custom scenarios
+        Object.keys(this.customScenarios).forEach(scenarioId => {
+            const scenario = this.customScenarios[scenarioId];
+            const option = document.createElement('option');
+            option.value = scenarioId;
+            option.textContent = scenario.name;
+            select.appendChild(option);
+        });
+        
+        // Restore selection if it still exists
+        if (currentValue && (currentValue === 'baseline' || currentValue === 'proposed' || this.customScenarios[currentValue])) {
+            select.value = currentValue;
         }
     }
 
@@ -283,6 +327,7 @@ class TireRecyclingAnalyzer {
             this.renderSwimLane();
             this.updateCostAnalysis();
             this.renderCharts();
+            this.updateScenarioButtons();
         });
 
         document.getElementById('throughput').addEventListener('input', (e) => {
@@ -303,18 +348,166 @@ class TireRecyclingAnalyzer {
             this.showComparison();
         });
 
+        // Scenario management
+        document.getElementById('addScenario').addEventListener('click', () => {
+            this.showScenarioEditor();
+        });
+
+        document.getElementById('saveScenario').addEventListener('click', () => {
+            this.saveCurrentScenario();
+        });
+
+        document.getElementById('deleteScenario').addEventListener('click', () => {
+            this.deleteCurrentScenario();
+        });
+
         document.getElementById('stepForm').addEventListener('submit', (e) => {
             e.preventDefault();
             this.saveStep();
+        });
+
+        document.getElementById('scenarioForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            this.createScenario();
         });
 
         document.getElementById('cancelEdit').addEventListener('click', () => {
             this.hideStepEditor();
         });
 
+        document.getElementById('cancelScenarioEdit').addEventListener('click', () => {
+            this.hideScenarioEditor();
+        });
+
         document.getElementById('deleteStep').addEventListener('click', () => {
             this.deleteStep();
         });
+
+        this.updateScenarioButtons();
+    }
+
+    updateScenarioButtons() {
+        const isCustomScenario = this.currentScenario !== 'baseline' && this.currentScenario !== 'proposed';
+        const saveBtn = document.getElementById('saveScenario');
+        const deleteBtn = document.getElementById('deleteScenario');
+        
+        if (isCustomScenario) {
+            saveBtn.title = 'Update Scenario';
+            deleteBtn.style.display = 'inline-flex';
+        } else {
+            saveBtn.title = 'Save as New Scenario';
+            deleteBtn.style.display = 'none';
+        }
+    }
+
+    showScenarioEditor() {
+        const editor = document.getElementById('scenarioEditor');
+        const overlay = document.createElement('div');
+        overlay.className = 'modal-overlay';
+        overlay.addEventListener('click', () => this.hideScenarioEditor());
+        document.body.appendChild(overlay);
+        
+        // Reset form
+        document.getElementById('scenarioForm').reset();
+        document.getElementById('baseScenario').value = this.currentScenario === 'baseline' || this.currentScenario === 'proposed' ? this.currentScenario : 'current';
+        
+        editor.style.display = 'block';
+    }
+
+    hideScenarioEditor() {
+        document.getElementById('scenarioEditor').style.display = 'none';
+        const overlay = document.querySelector('.modal-overlay');
+        if (overlay) {
+            overlay.remove();
+        }
+    }
+
+    createScenario() {
+        const name = document.getElementById('scenarioName').value.trim();
+        const description = document.getElementById('scenarioDescription').value.trim();
+        const baseScenario = document.getElementById('baseScenario').value;
+        
+        if (!name) {
+            alert('Please enter a scenario name');
+            return;
+        }
+        
+        // Generate unique ID
+        const scenarioId = 'scenario-' + Date.now();
+        
+        // Get base process
+        let baseProcess;
+        switch (baseScenario) {
+            case 'baseline':
+                baseProcess = this.baselineProcess;
+                break;
+            case 'proposed':
+                baseProcess = this.proposedProcess;
+                break;
+            case 'current':
+                baseProcess = this.getCurrentProcess();
+                break;
+            default:
+                baseProcess = this.baselineProcess;
+        }
+        
+        // Create new scenario
+        this.customScenarios[scenarioId] = {
+            name: name,
+            description: description,
+            createdAt: new Date().toISOString(),
+            process: JSON.parse(JSON.stringify(baseProcess)) // Deep copy
+        };
+        
+        this.saveCustomScenarios();
+        this.populateScenarioDropdown();
+        
+        // Switch to new scenario
+        this.currentScenario = scenarioId;
+        document.getElementById('scenarioSelect').value = scenarioId;
+        
+        this.hideScenarioEditor();
+        this.renderSwimLane();
+        this.updateCostAnalysis();
+        this.renderCharts();
+        this.updateScenarioButtons();
+    }
+
+    saveCurrentScenario() {
+        if (this.currentScenario === 'baseline' || this.currentScenario === 'proposed') {
+            // Save as new scenario
+            this.showScenarioEditor();
+        } else {
+            // Update existing custom scenario
+            if (this.customScenarios[this.currentScenario]) {
+                this.customScenarios[this.currentScenario].process = JSON.parse(JSON.stringify(this.getCurrentProcess()));
+                this.customScenarios[this.currentScenario].updatedAt = new Date().toISOString();
+                this.saveCustomScenarios();
+                alert('Scenario updated successfully!');
+            }
+        }
+    }
+
+    deleteCurrentScenario() {
+        if (this.currentScenario === 'baseline' || this.currentScenario === 'proposed') {
+            alert('Cannot delete built-in scenarios');
+            return;
+        }
+        
+        if (confirm('Are you sure you want to delete this scenario?')) {
+            delete this.customScenarios[this.currentScenario];
+            this.saveCustomScenarios();
+            this.populateScenarioDropdown();
+            
+            // Switch back to baseline
+            this.currentScenario = 'baseline';
+            document.getElementById('scenarioSelect').value = 'baseline';
+            
+            this.renderSwimLane();
+            this.updateCostAnalysis();
+            this.renderCharts();
+            this.updateScenarioButtons();
+        }
     }
 
     renderSwimLane() {
@@ -545,9 +738,25 @@ class TireRecyclingAnalyzer {
             duration: parseFloat(document.getElementById('duration').value) || 0
         };
 
+        // Ensure we're working with a custom scenario
+        if (this.currentScenario === 'baseline' || this.currentScenario === 'proposed') {
+            // Create a new custom scenario based on current
+            const scenarioId = 'scenario-' + Date.now();
+            this.customScenarios[scenarioId] = {
+                name: `Modified ${this.currentScenario === 'baseline' ? 'Baseline' : 'Proposed'}`,
+                description: `Modified version of ${this.currentScenario} process`,
+                createdAt: new Date().toISOString(),
+                process: JSON.parse(JSON.stringify(this.getCurrentProcess()))
+            };
+            this.currentScenario = scenarioId;
+            this.populateScenarioDropdown();
+            document.getElementById('scenarioSelect').value = scenarioId;
+        }
+
+        const process = this.getCurrentProcess();
+
         if (this.currentEditingStep) {
             // Edit existing step
-            const process = this.getCurrentProcess();
             const stepIndex = process.findIndex(s => s.id === this.currentEditingStep);
             if (stepIndex !== -1) {
                 Object.assign(process[stepIndex], formData);
@@ -559,30 +768,52 @@ class TireRecyclingAnalyzer {
                 ...formData,
                 description: 'Custom process step'
             };
-            
-            // Add to custom process if not already using it
-            if (this.currentScenario !== 'custom') {
-                this.customProcess = [...this.getCurrentProcess()];
-                this.currentScenario = 'custom';
-                document.getElementById('scenarioSelect').value = 'custom';
-            }
-            this.customProcess.push(newStep);
+            process.push(newStep);
+        }
+
+        // Save custom scenario
+        if (this.currentScenario !== 'baseline' && this.currentScenario !== 'proposed') {
+            this.customScenarios[this.currentScenario].process = process;
+            this.customScenarios[this.currentScenario].updatedAt = new Date().toISOString();
+            this.saveCustomScenarios();
         }
 
         this.hideStepEditor();
         this.renderSwimLane();
         this.updateCostAnalysis();
         this.renderCharts();
+        this.updateScenarioButtons();
     }
 
     deleteStep() {
         if (!this.currentEditingStep) return;
         
         if (confirm('Are you sure you want to delete this step?')) {
+            // Ensure we're working with a custom scenario
+            if (this.currentScenario === 'baseline' || this.currentScenario === 'proposed') {
+                const scenarioId = 'scenario-' + Date.now();
+                this.customScenarios[scenarioId] = {
+                    name: `Modified ${this.currentScenario === 'baseline' ? 'Baseline' : 'Proposed'}`,
+                    description: `Modified version of ${this.currentScenario} process`,
+                    createdAt: new Date().toISOString(),
+                    process: JSON.parse(JSON.stringify(this.getCurrentProcess()))
+                };
+                this.currentScenario = scenarioId;
+                this.populateScenarioDropdown();
+                document.getElementById('scenarioSelect').value = scenarioId;
+            }
+
             const process = this.getCurrentProcess();
             const stepIndex = process.findIndex(s => s.id === this.currentEditingStep);
             if (stepIndex !== -1) {
                 process.splice(stepIndex, 1);
+            }
+            
+            // Save custom scenario
+            if (this.currentScenario !== 'baseline' && this.currentScenario !== 'proposed') {
+                this.customScenarios[this.currentScenario].process = process;
+                this.customScenarios[this.currentScenario].updatedAt = new Date().toISOString();
+                this.saveCustomScenarios();
             }
             
             this.hideStepEditor();
@@ -596,7 +827,7 @@ class TireRecyclingAnalyzer {
         const comparisonSection = document.getElementById('comparisonSection');
         const table = document.getElementById('comparisonTable').getElementsByTagName('tbody')[0];
         
-        // Calculate costs for both scenarios
+        // Calculate costs for baseline and proposed scenarios
         const originalScenario = this.currentScenario;
         
         this.currentScenario = 'baseline';

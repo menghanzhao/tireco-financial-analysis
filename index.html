@@ -18,11 +18,15 @@
         <div class="controls">
             <div class="control-group">
                 <label for="scenarioSelect">Scenario:</label>
-                <select id="scenarioSelect">
-                    <option value="baseline">Current Process (Baseline)</option>
-                    <option value="proposed">Proposed Process</option>
-                    <option value="custom">Custom Process</option>
-                </select>
+                <div class="scenario-controls">
+                    <select id="scenarioSelect">
+                        <option value="baseline">Current Process (Baseline)</option>
+                        <option value="proposed">Proposed Process</option>
+                    </select>
+                    <button id="addScenario" title="Add New Scenario">+</button>
+                    <button id="saveScenario" title="Save Current Scenario">💾</button>
+                    <button id="deleteScenario" title="Delete Scenario">🗑️</button>
+                </div>
             </div>
             <div class="control-group">
                 <label for="throughput">Daily Throughput (tons):</label>
@@ -136,6 +140,32 @@
                     <button type="submit">Save Step</button>
                     <button type="button" id="cancelEdit">Cancel</button>
                     <button type="button" id="deleteStep">Delete Step</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="scenario-editor" id="scenarioEditor" style="display: none;">
+            <h3>Scenario Management</h3>
+            <form id="scenarioForm">
+                <div class="form-group">
+                    <label for="scenarioName">Scenario Name:</label>
+                    <input type="text" id="scenarioName" required placeholder="Enter scenario name">
+                </div>
+                <div class="form-group">
+                    <label for="scenarioDescription">Description (optional):</label>
+                    <textarea id="scenarioDescription" rows="3" placeholder="Describe this scenario..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="baseScenario">Base on existing scenario:</label>
+                    <select id="baseScenario">
+                        <option value="baseline">Current Process (Baseline)</option>
+                        <option value="proposed">Proposed Process</option>
+                        <option value="current">Current Scenario</option>
+                    </select>
+                </div>
+                <div class="form-buttons">
+                    <button type="submit">Create Scenario</button>
+                    <button type="button" id="cancelScenarioEdit">Cancel</button>
                 </div>
             </form>
         </div>
