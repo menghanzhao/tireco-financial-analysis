@@ -20,12 +20,17 @@ class TireRecyclingAnalyzer {
         this.currentEditingCapitalCost = null;
         
         this.initializeEventListeners();
+        this.initializeInputFields();
         this.populateScenarioDropdown();
         this.renderCapitalCostsTable();
         this.renderProductTable();
         this.renderSwimLane();
         this.updateCostAnalysis();
         this.renderCharts();
+    }
+
+    initializeInputFields() {
+        document.getElementById('annualThroughput').value = this.annualThroughput;
     }
 
     createBaselineProcess() {
@@ -39,6 +44,7 @@ class TireRecyclingAnalyzer {
                 energyCost: 50,
                 maintenanceCost: 25,
                 duration: 4,
+                workingDaysPerYear: 250,
                 description: 'Collection from auto shops, dealerships, waste centers'
             },
             {
@@ -50,6 +56,7 @@ class TireRecyclingAnalyzer {
                 energyCost: 120,
                 maintenanceCost: 40,
                 duration: 2,
+                workingDaysPerYear: 250,
                 description: 'Transport collected tires to recycling facility'
             },
             {
@@ -61,6 +68,7 @@ class TireRecyclingAnalyzer {
                 energyCost: 30,
                 maintenanceCost: 15,
                 duration: 3,
+                workingDaysPerYear: 250,
                 description: 'Sort and inspect tires for processing'
             },
             {
@@ -72,6 +80,7 @@ class TireRecyclingAnalyzer {
                 energyCost: 80,
                 maintenanceCost: 60,
                 duration: 2,
+                workingDaysPerYear: 300,
                 description: 'Remove steel rims and cut sidewalls'
             },
             {
@@ -83,6 +92,7 @@ class TireRecyclingAnalyzer {
                 energyCost: 700,
                 maintenanceCost: 265,
                 duration: 6,
+                workingDaysPerYear: 300,
                 description: 'Shred tires and separate steel wires magnetically'
             },
             {
@@ -94,6 +104,7 @@ class TireRecyclingAnalyzer {
                 energyCost: 60,
                 maintenanceCost: 20,
                 duration: 1,
+                workingDaysPerYear: 250,
                 description: 'Transport processed rubber feedstock to manufacturing'
             },
             {
@@ -105,6 +116,7 @@ class TireRecyclingAnalyzer {
                 energyCost: 250,
                 maintenanceCost: 150,
                 duration: 8,
+                workingDaysPerYear: 300,
                 description: 'Manufacture rubber products from processed feedstock'
             },
             {
@@ -116,6 +128,7 @@ class TireRecyclingAnalyzer {
                 energyCost: 80,
                 maintenanceCost: 30,
                 duration: 2,
+                workingDaysPerYear: 250,
                 description: 'Package and distribute finished products to market'
             }
         ];
@@ -132,6 +145,7 @@ class TireRecyclingAnalyzer {
                 energyCost: 40,
                 maintenanceCost: 60,
                 duration: 2,
+                workingDaysPerYear: 250,
                 description: 'Automated tire collection with IoT tracking'
             },
             {
@@ -143,6 +157,7 @@ class TireRecyclingAnalyzer {
                 energyCost: 80,
                 maintenanceCost: 50,
                 duration: 1.5,
+                workingDaysPerYear: 250,
                 description: 'Route-optimized tire transportation to facility'
             },
             {
@@ -154,6 +169,7 @@ class TireRecyclingAnalyzer {
                 energyCost: 400,
                 maintenanceCost: 400,
                 duration: 4,
+                workingDaysPerYear: 300,
                 description: 'Integrated AI sorting, rim removal, shredding, and steel separation'
             },
             {
@@ -165,6 +181,7 @@ class TireRecyclingAnalyzer {
                 energyCost: 40,
                 maintenanceCost: 30,
                 duration: 0.5,
+                workingDaysPerYear: 250,
                 description: 'Automated conveyor system for processed feedstock'
             },
             {
@@ -176,6 +193,7 @@ class TireRecyclingAnalyzer {
                 energyCost: 200,
                 maintenanceCost: 225,
                 duration: 6,
+                workingDaysPerYear: 300,
                 description: 'Advanced manufacturing with quality control integration'
             },
             {
@@ -187,6 +205,7 @@ class TireRecyclingAnalyzer {
                 energyCost: 50,
                 maintenanceCost: 45,
                 duration: 1,
+                workingDaysPerYear: 250,
                 description: 'Automated packaging and intelligent distribution system'
             }
         ];
@@ -245,16 +264,17 @@ class TireRecyclingAnalyzer {
     }
 
     calculateStepCost(step) {
-        const dailyEquipmentCost = (step.equipmentCost * 0.1) / 365; // 10% annual depreciation
+        const dailyEquipmentCost = (step.equipmentCost * 0.1) / 365; // 10% annual depreciation (calendar days)
         const totalDailyCost = dailyEquipmentCost + step.laborCost + step.energyCost + step.maintenanceCost;
-        const annualCost = totalDailyCost * 365;
-        const dailyTireCapacity = this.annualThroughput / 365;
+        const stepWorkingDays = step.workingDaysPerYear || 250; // Default to 250 if not specified
+        const annualOperatingCost = totalDailyCost * stepWorkingDays; // Use step-specific working days
+        const dailyTireCapacity = this.annualThroughput / stepWorkingDays;
         const dailyTonnageCapacity = dailyTireCapacity * this.tireWeight;
         
         return {
             daily: totalDailyCost,
-            annual: annualCost,
-            perTire: annualCost / this.annualThroughput,
+            annual: annualOperatingCost,
+            perTire: annualOperatingCost / this.annualThroughput,
             perTon: totalDailyCost / dailyTonnageCapacity,
             breakdown: {
                 equipment: dailyEquipmentCost,
@@ -323,7 +343,7 @@ class TireRecyclingAnalyzer {
             totalAnnualCost: totalAnnualCostWithDepreciation,
             totalCapitalCost,
             costPerTire: totalAnnualCostWithDepreciation / this.annualThroughput,
-            costPerTon: totalDaily / ((this.annualThroughput / 365) * this.tireWeight),
+            costPerTon: totalAnnualCostWithDepreciation / (this.annualThroughput * this.tireWeight),
             totalEquipment,
             stepCosts,
             departmentCosts: this.calculateDepartmentCosts(process),
@@ -382,6 +402,7 @@ class TireRecyclingAnalyzer {
             this.renderCharts();
         });
 
+
         // Product management
         document.getElementById('addProduct').addEventListener('click', () => {
             this.showProductEditor();
@@ -416,6 +437,10 @@ class TireRecyclingAnalyzer {
 
         document.getElementById('exportDiagram').addEventListener('click', () => {
             this.exportDiagram();
+        });
+
+        document.getElementById('exportExcel').addEventListener('click', () => {
+            this.exportToExcel();
         });
 
         document.getElementById('compareScenarios').addEventListener('click', () => {
@@ -843,6 +868,7 @@ class TireRecyclingAnalyzer {
                 document.getElementById('energyCost').value = step.energyCost;
                 document.getElementById('maintenanceCost').value = step.maintenanceCost;
                 document.getElementById('duration').value = step.duration;
+                document.getElementById('workingDaysPerYear').value = step.workingDaysPerYear || 250;
                 document.getElementById('deleteStep').style.display = 'inline-block';
             }
         } else {
@@ -874,7 +900,8 @@ class TireRecyclingAnalyzer {
             laborCost: parseFloat(document.getElementById('laborCost').value) || 0,
             energyCost: parseFloat(document.getElementById('energyCost').value) || 0,
             maintenanceCost: parseFloat(document.getElementById('maintenanceCost').value) || 0,
-            duration: parseFloat(document.getElementById('duration').value) || 0
+            duration: parseFloat(document.getElementById('duration').value) || 0,
+            workingDaysPerYear: parseFloat(document.getElementById('workingDaysPerYear').value) || 250
         };
 
         // Ensure we're working with a custom scenario
@@ -1043,6 +1070,243 @@ class TireRecyclingAnalyzer {
             link.href = canvas.toDataURL();
             link.click();
         });
+    }
+
+    exportToExcel() {
+        const costs = this.calculateTotalCosts();
+        const process = this.getCurrentProcess();
+        const wb = XLSX.utils.book_new();
+
+        // 1. Scenario Overview Sheet
+        const overviewData = [
+            ['Tire Recycling Financial Analysis', ''],
+            ['Scenario Name', this.getScenarioDisplayName()],
+            ['Export Date', new Date().toLocaleDateString()],
+            ['Annual Tire Throughput', this.annualThroughput.toLocaleString() + ' tires'],
+            ['Tire Weight', this.tireWeight + ' tonnes each'],
+            ['Working Days per Year', this.workingDaysPerYear + ' days'],
+            ['Total Annual Input', (this.annualThroughput * this.tireWeight).toLocaleString() + ' tonnes'],
+            [''],
+            ['FINANCIAL SUMMARY', ''],
+            ['Total Annual Cost', '$' + costs.totalAnnualCost.toLocaleString()],
+            ['- Operating Cost', '$' + costs.annualOperatingCost.toLocaleString()],
+            ['- Depreciation', '$' + costs.annualDepreciation.toLocaleString()],
+            ['Total Capital Investment', '$' + costs.totalCapitalCost.toLocaleString()],
+            ['Annual Revenue', '$' + costs.annualRevenue.toLocaleString()],
+            ['Annual Profit', '$' + costs.annualProfit.toLocaleString()],
+            ['Profit Margin', costs.profitMargin.toFixed(2) + '%'],
+            ['Cost Per Tire', '$' + costs.costPerTire.toFixed(2)],
+            ['Cost Per Ton', '$' + costs.costPerTon.toFixed(2)],
+        ];
+        const overviewWS = XLSX.utils.aoa_to_sheet(overviewData);
+        XLSX.utils.book_append_sheet(wb, overviewWS, 'Overview');
+
+        // 2. Capital Costs Sheet
+        const capitalData = [
+            ['INITIAL CAPITAL COSTS', '', '', ''],
+            ['Item', 'Cost ($)', 'Depreciation (years)', 'Annual Depreciation ($)'],
+        ];
+        this.capitalCosts.forEach(item => {
+            const annualDep = item.depreciationYears > 0 ? item.cost / item.depreciationYears : 0;
+            capitalData.push([
+                item.name,
+                item.cost,
+                item.depreciationYears || 'N/A',
+                annualDep
+            ]);
+        });
+        capitalData.push(['', '', '', '']);
+        capitalData.push(['TOTALS', costs.totalCapitalCost, '', costs.annualDepreciation]);
+        const capitalWS = XLSX.utils.aoa_to_sheet(capitalData);
+        XLSX.utils.book_append_sheet(wb, capitalWS, 'Capital Costs');
+
+        // 3. Product Yield Sheet
+        const productData = [
+            ['PRODUCT YIELD CONFIGURATION', '', '', ''],
+            ['Product Name', 'Yield (%)', 'Price ($/ton)', 'Annual Revenue ($)'],
+        ];
+        const annualTonnageInput = this.annualThroughput * this.tireWeight;
+        let totalYield = 0;
+        let totalRevenue = 0;
+        this.products.forEach(product => {
+            const productOutput = annualTonnageInput * (product.yield / 100);
+            const productRevenue = productOutput * product.price;
+            totalYield += product.yield;
+            totalRevenue += productRevenue;
+            productData.push([
+                product.name,
+                product.yield,
+                product.price,
+                productRevenue
+            ]);
+        });
+        productData.push(['', '', '', '']);
+        productData.push(['TOTALS', totalYield + '%', '', totalRevenue]);
+        const productWS = XLSX.utils.aoa_to_sheet(productData);
+        XLSX.utils.book_append_sheet(wb, productWS, 'Product Yield');
+
+        // 4. Process Flow Sheet
+        const processData = [
+            ['PROCESS FLOW BREAKDOWN', '', '', '', '', '', '', ''],
+            ['Step Name', 'Department', 'Equipment Cost ($)', 'Daily Labor ($)', 'Daily Energy ($)', 'Daily Maintenance ($)', 'Duration (hours)', 'Working Days/Year', 'Annual Cost ($)'],
+        ];
+        let totalProcessEquipment = 0;
+        let totalProcessAnnual = 0;
+        process.forEach(step => {
+            const stepCost = this.calculateStepCost(step);
+            totalProcessEquipment += step.equipmentCost;
+            totalProcessAnnual += stepCost.annual;
+            processData.push([
+                step.name,
+                this.formatDepartmentName(step.department),
+                step.equipmentCost,
+                step.laborCost,
+                step.energyCost,
+                step.maintenanceCost,
+                step.duration,
+                step.workingDaysPerYear || 250,
+                stepCost.annual
+            ]);
+        });
+        processData.push(['', '', '', '', '', '', '', '', '']);
+        processData.push(['TOTALS', '', totalProcessEquipment, '', '', '', '', '', totalProcessAnnual]);
+        const processWS = XLSX.utils.aoa_to_sheet(processData);
+        XLSX.utils.book_append_sheet(wb, processWS, 'Process Flow');
+
+        // 5. Department Summary Sheet with Step Details
+        const departmentData = [
+            ['DETAILED COST BY DEPARTMENT', '', '', '', '', '', ''],
+            ['Department / Step', 'Equipment Cost ($)', 'Daily Labor ($)', 'Daily Energy ($)', 'Daily Maintenance ($)', 'Working Days/Year', 'Annual Cost ($)'],
+            ['', '', '', '', '', '', '']
+        ];
+        
+        // Group steps by department
+        const stepsByDepartment = {};
+        process.forEach(step => {
+            if (!stepsByDepartment[step.department]) {
+                stepsByDepartment[step.department] = [];
+            }
+            stepsByDepartment[step.department].push(step);
+        });
+        
+        // Add details for each department
+        Object.entries(stepsByDepartment).forEach(([dept, steps]) => {
+            // Department header
+            departmentData.push([
+                this.formatDepartmentName(dept).toUpperCase(),
+                '', '', '', '', '', ''
+            ]);
+            
+            let deptEquipmentTotal = 0;
+            let deptLaborTotal = 0;
+            let deptEnergyTotal = 0;
+            let deptMaintenanceTotal = 0;
+            let deptAnnualTotal = 0;
+            
+            // Individual steps within department
+            steps.forEach(step => {
+                const stepCost = this.calculateStepCost(step);
+                deptEquipmentTotal += step.equipmentCost;
+                deptLaborTotal += step.laborCost;
+                deptEnergyTotal += step.energyCost;
+                deptMaintenanceTotal += step.maintenanceCost;
+                deptAnnualTotal += stepCost.annual;
+                
+                departmentData.push([
+                    '  • ' + step.name,
+                    step.equipmentCost,
+                    step.laborCost,
+                    step.energyCost,
+                    step.maintenanceCost,
+                    step.workingDaysPerYear || 250,
+                    stepCost.annual
+                ]);
+            });
+            
+            // Department subtotal
+            departmentData.push([
+                '  SUBTOTAL - ' + this.formatDepartmentName(dept),
+                deptEquipmentTotal,
+                deptLaborTotal,
+                deptEnergyTotal,
+                deptMaintenanceTotal,
+                '-',
+                deptAnnualTotal
+            ]);
+            departmentData.push(['', '', '', '', '', '', '']); // Empty row
+        });
+        
+        // Grand totals
+        let totalEquipment = 0;
+        let totalLabor = 0;
+        let totalEnergy = 0;
+        let totalMaintenance = 0;
+        process.forEach(step => {
+            totalEquipment += step.equipmentCost;
+            totalLabor += step.laborCost;
+            totalEnergy += step.energyCost;
+            totalMaintenance += step.maintenanceCost;
+        });
+        
+        departmentData.push([
+            'GRAND TOTAL',
+            totalEquipment,
+            totalLabor,
+            totalEnergy,
+            totalMaintenance,
+            '-',
+            costs.annualOperatingCost
+        ]);
+        
+        const departmentWS = XLSX.utils.aoa_to_sheet(departmentData);
+        XLSX.utils.book_append_sheet(wb, departmentWS, 'Department Breakdown');
+
+        // 6. Financial Analysis Sheet
+        const analysisData = [
+            ['DETAILED FINANCIAL ANALYSIS', ''],
+            ['', ''],
+            ['INPUT PARAMETERS', ''],
+            ['Annual Tire Throughput', this.annualThroughput + ' tires'],
+            ['Weight per Tire', this.tireWeight + ' tonnes'],
+            ['Working Days per Year', this.workingDaysPerYear + ' days'],
+            ['Total Annual Input', (this.annualThroughput * this.tireWeight) + ' tonnes'],
+            ['', ''],
+            ['COST BREAKDOWN', ''],
+            ['Total Equipment Investment', '$' + costs.totalEquipment.toLocaleString()],
+            ['Total Capital Investment', '$' + costs.totalCapitalCost.toLocaleString()],
+            ['Daily Operating Cost', '$' + costs.totalDaily.toLocaleString()],
+            ['Annual Operating Cost', '$' + costs.annualOperatingCost.toLocaleString()],
+            ['Annual Depreciation', '$' + costs.annualDepreciation.toLocaleString()],
+            ['Total Annual Cost', '$' + costs.totalAnnualCost.toLocaleString()],
+            ['', ''],
+            ['REVENUE & PROFITABILITY', ''],
+            ['Total Product Yield', costs.totalYield + '%'],
+            ['Annual Product Output', (annualTonnageInput * (costs.totalYield / 100)).toLocaleString() + ' tonnes'],
+            ['Annual Revenue', '$' + costs.annualRevenue.toLocaleString()],
+            ['Annual Profit', '$' + costs.annualProfit.toLocaleString()],
+            ['Profit Margin', costs.profitMargin.toFixed(2) + '%'],
+            ['', ''],
+            ['UNIT ECONOMICS', ''],
+            ['Cost per Tire', '$' + costs.costPerTire.toFixed(2)],
+            ['Cost per Tonne Input', '$' + costs.costPerTon.toFixed(2)],
+            ['Revenue per Tonne Input', '$' + (costs.annualRevenue / annualTonnageInput).toFixed(2)],
+        ];
+        const analysisWS = XLSX.utils.aoa_to_sheet(analysisData);
+        XLSX.utils.book_append_sheet(wb, analysisWS, 'Financial Analysis');
+
+        // Export the workbook
+        const fileName = `tire-recycling-analysis-${this.currentScenario}-${new Date().toISOString().split('T')[0]}.xlsx`;
+        XLSX.writeFile(wb, fileName);
+    }
+
+    getScenarioDisplayName() {
+        switch (this.currentScenario) {
+            case 'baseline': return 'Current Process (Baseline)';
+            case 'proposed': return 'Proposed Process';
+            default: 
+                const scenario = this.customScenarios[this.currentScenario];
+                return scenario ? scenario.name : 'Custom Scenario';
+        }
     }
 
     // Product Management Methods
