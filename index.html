@@ -29,13 +29,83 @@
                 </div>
             </div>
             <div class="control-group">
-                <label for="throughput">Daily Throughput (tons):</label>
-                <input type="number" id="throughput" value="10" min="1" max="100">
+                <label for="annualThroughput">Annual Tire Throughput:</label>
+                <input type="number" id="annualThroughput" value="3000" min="100" max="50000">
             </div>
+        </div>
+
+        <div class="capital-costs-section">
+            <div class="capital-costs-header">
+                <h4>Initial Capital Costs</h4>
+                <button type="button" id="addCapitalCost">Add Capital Cost</button>
+            </div>
+            <div class="capital-costs-table">
+                <table id="capitalCostsTable">
+                    <thead>
+                        <tr>
+                            <th>Item</th>
+                            <th>Cost ($)</th>
+                            <th>Depreciation (years)</th>
+                            <th>Annual Depreciation</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="capitalCostsTableBody">
+                        <!-- Capital costs will be added dynamically -->
+                    </tbody>
+                    <tfoot>
+                        <tr class="total-row">
+                            <td><strong>Total Initial Investment</strong></td>
+                            <td><strong id="capitalCostTableTotal">$0</strong></td>
+                            <td>-</td>
+                            <td><strong id="totalAnnualDepreciation">$0</strong></td>
+                            <td>-</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+
+        <div class="controls">
             <div class="control-group">
                 <button id="addStep">Add Process Step</button>
                 <button id="exportDiagram">Export Diagram</button>
                 <button id="compareScenarios">Compare Scenarios</button>
+            </div>
+        </div>
+
+        <div class="product-yield-section">
+            <div class="product-yield-header">
+                <h4>Product Yield Configuration</h4>
+                <button type="button" id="addProduct">Add Product</button>
+            </div>
+            <div class="product-yield-table">
+                <table id="productTable">
+                    <thead>
+                        <tr>
+                            <th>Product Name</th>
+                            <th>Yield (%)</th>
+                            <th>Price ($/ton)</th>
+                            <th>Revenue</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="productTableBody">
+                        <!-- Products will be added dynamically -->
+                    </tbody>
+                    <tfoot>
+                        <tr class="total-row">
+                            <td><strong>Total</strong></td>
+                            <td><strong id="totalYield">0%</strong></td>
+                            <td>-</td>
+                            <td><strong id="totalRevenue">$0</strong></td>
+                            <td>-</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+            <div class="yield-status" id="yieldStatus">
+                <span class="yield-indicator" id="yieldIndicator">Total yield: 0%</span>
             </div>
         </div>
 
@@ -51,31 +121,41 @@
                 <h3>Cost Summary</h3>
                 <div class="summary-cards">
                     <div class="cost-card">
-                        <h4>Total Daily Cost</h4>
-                        <span id="totalDailyCost">$0</span>
+                        <h4>Total Annual Cost</h4>
+                        <span id="totalAnnualCost">$0</span>
                     </div>
                     <div class="cost-card">
-                        <h4>Cost Per Ton</h4>
-                        <span id="costPerTon">$0</span>
+                        <h4>Initial Investment</h4>
+                        <span id="totalCapitalCost">$0</span>
                     </div>
                     <div class="cost-card">
-                        <h4>Annual Cost</h4>
-                        <span id="annualCost">$0</span>
+                        <h4>Annual Revenue</h4>
+                        <span id="annualRevenue">$0</span>
                     </div>
                     <div class="cost-card">
-                        <h4>Break-even Revenue</h4>
-                        <span id="breakEvenRevenue">$0</span>
+                        <h4>Annual Profit</h4>
+                        <span id="annualProfit">$0</span>
                     </div>
                 </div>
             </div>
 
             <div class="charts-container">
                 <div class="chart-wrapper">
-                    <h3>Cost Breakdown by Process Step</h3>
+                    <div class="chart-header">
+                        <h3>Cost Breakdown</h3>
+                        <div class="chart-toggle">
+                            <label>
+                                <input type="radio" name="chartView" value="steps" checked> By Step
+                            </label>
+                            <label>
+                                <input type="radio" name="chartView" value="departments"> By Department
+                            </label>
+                        </div>
+                    </div>
                     <canvas id="costBreakdownChart"></canvas>
                 </div>
                 <div class="chart-wrapper">
-                    <h3>Cost vs Revenue Analysis</h3>
+                    <h3>Annual Financial Performance</h3>
                     <canvas id="revenueChart"></canvas>
                 </div>
             </div>
@@ -109,11 +189,11 @@
                     <label for="stepDepartment">Department:</label>
                     <select id="stepDepartment">
                         <option value="collection">Collection</option>
-                        <option value="transportation">Transportation</option>
+                        <option value="tire-transportation">Tire Transportation</option>
                         <option value="processing">Processing</option>
-                        <option value="separation">Separation</option>
-                        <option value="quality">Quality Control</option>
-                        <option value="packaging">Packaging</option>
+                        <option value="feedstock-transportation">Processed Feedstock Transportation</option>
+                        <option value="product-manufacturing">Product Manufacturing</option>
+                        <option value="product-distribution">Product Distribution</option>
                     </select>
                 </div>
                 <div class="form-group">
@@ -166,6 +246,57 @@
                 <div class="form-buttons">
                     <button type="submit">Create Scenario</button>
                     <button type="button" id="cancelScenarioEdit">Cancel</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="product-editor" id="productEditor" style="display: none;">
+            <h3>Add/Edit Product</h3>
+            <form id="productForm">
+                <div class="form-group">
+                    <label for="productName">Product Name:</label>
+                    <input type="text" id="productName" required placeholder="e.g., Rubber Crumb, Steel Wire">
+                </div>
+                <div class="form-group">
+                    <label for="productYieldPercent">Yield (%):</label>
+                    <input type="number" id="productYieldPercent" required min="0.1" max="100" step="0.1" placeholder="e.g., 75">
+                </div>
+                <div class="form-group">
+                    <label for="productPricePerTon">Price ($/ton):</label>
+                    <input type="number" id="productPricePerTon" required min="0.01" step="0.01" placeholder="e.g., 230">
+                </div>
+                <div class="yield-warning" id="yieldWarning" style="display: none;">
+                    <p>⚠️ Total yield would exceed 100%. Please adjust the yield percentage.</p>
+                </div>
+                <div class="form-buttons">
+                    <button type="submit">Save Product</button>
+                    <button type="button" id="cancelProductEdit">Cancel</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="capital-cost-editor" id="capitalCostEditor" style="display: none;">
+            <h3>Add/Edit Capital Cost</h3>
+            <form id="capitalCostForm">
+                <div class="form-group">
+                    <label for="capitalCostName">Item Name:</label>
+                    <input type="text" id="capitalCostName" required placeholder="e.g., Land, Building, Equipment">
+                </div>
+                <div class="form-group">
+                    <label for="capitalCostAmount">Cost ($):</label>
+                    <input type="number" id="capitalCostAmount" required min="0" step="1000" placeholder="e.g., 500000">
+                </div>
+                <div class="form-group">
+                    <label for="depreciationYears">Depreciation Period (years):</label>
+                    <input type="number" id="depreciationYears" required min="1" max="50" placeholder="e.g., 20">
+                </div>
+                <div class="form-group">
+                    <label for="capitalCostDescription">Description (optional):</label>
+                    <textarea id="capitalCostDescription" rows="2" placeholder="Brief description of the capital cost item"></textarea>
+                </div>
+                <div class="form-buttons">
+                    <button type="submit">Save Capital Cost</button>
+                    <button type="button" id="cancelCapitalCostEdit">Cancel</button>
                 </div>
             </form>
         </div>

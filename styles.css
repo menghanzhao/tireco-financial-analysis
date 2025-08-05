@@ -267,6 +267,30 @@ button:hover {
     max-height: 300px;
 }
 
+.chart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.chart-toggle {
+    display: flex;
+    gap: 15px;
+}
+
+.chart-toggle label {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.chart-toggle input[type="radio"] {
+    margin: 0;
+}
+
 .scenario-comparison {
     background: white;
     border-radius: 10px;
@@ -310,7 +334,9 @@ button:hover {
 }
 
 .process-editor,
-.scenario-editor {
+.scenario-editor,
+.product-editor,
+.capital-cost-editor {
     background: white;
     border-radius: 10px;
     padding: 20px;
@@ -327,7 +353,9 @@ button:hover {
 }
 
 .process-editor h3,
-.scenario-editor h3 {
+.scenario-editor h3,
+.product-editor h3,
+.capital-cost-editor h3 {
     margin-bottom: 20px;
     color: #333;
     border-bottom: 3px solid #667eea;
@@ -442,4 +470,220 @@ button:hover {
 .neutral-change {
     color: #6c757d;
     font-weight: bold;
+}
+
+/* Product Yield Section */
+.product-yield-section {
+    background: white;
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 30px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.product-yield-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.product-yield-header h4 {
+    margin: 0;
+    color: #333;
+}
+
+.product-yield-table {
+    overflow-x: auto;
+    margin-bottom: 15px;
+}
+
+.product-yield-table table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+}
+
+.product-yield-table th,
+.product-yield-table td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.product-yield-table th {
+    background: #f8f9fa;
+    font-weight: 600;
+    color: #495057;
+}
+
+.product-yield-table tr:hover {
+    background: #f8f9fa;
+}
+
+.product-yield-table .total-row {
+    background: #e9ecef;
+    border-top: 2px solid #667eea;
+}
+
+.product-yield-table .total-row:hover {
+    background: #e9ecef;
+}
+
+.product-yield-table input {
+    width: 80px;
+    padding: 4px 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.product-yield-table input:focus {
+    outline: none;
+    border-color: #667eea;
+}
+
+.yield-status {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 10px;
+    border-radius: 5px;
+    font-weight: 600;
+}
+
+.yield-indicator {
+    padding: 5px 15px;
+    border-radius: 20px;
+    color: white;
+    transition: all 0.3s;
+}
+
+.yield-indicator.valid {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+}
+
+.yield-indicator.warning {
+    background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%);
+}
+
+.yield-indicator.invalid {
+    background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+}
+
+.yield-warning {
+    background: #fff3cd;
+    color: #856404;
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid #ffeaa7;
+    margin-bottom: 15px;
+}
+
+.yield-warning p {
+    margin: 0;
+    font-size: 14px;
+}
+
+.product-actions {
+    display: flex;
+    gap: 5px;
+}
+
+.product-actions button {
+    padding: 4px 8px;
+    font-size: 12px;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.edit-product {
+    background: #007bff;
+    color: white;
+}
+
+.edit-product:hover {
+    background: #0056b3;
+}
+
+.delete-product {
+    background: #dc3545;
+    color: white;
+}
+
+.delete-product:hover {
+    background: #c82333;
+}
+
+/* Capital Costs Section */
+.capital-costs-section {
+    background: white;
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 30px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.capital-costs-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.capital-costs-header h4 {
+    margin: 0;
+    color: #333;
+}
+
+.capital-costs-table {
+    overflow-x: auto;
+    margin-bottom: 15px;
+}
+
+.capital-costs-table table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+}
+
+.capital-costs-table th,
+.capital-costs-table td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.capital-costs-table th {
+    background: #f8f9fa;
+    font-weight: 600;
+    color: #495057;
+}
+
+.capital-costs-table tr:hover {
+    background: #f8f9fa;
+}
+
+.capital-costs-table .total-row {
+    background: #e9ecef;
+    border-top: 2px solid #667eea;
+}
+
+.capital-costs-table .total-row:hover {
+    background: #e9ecef;
+}
+
+.capital-costs-table input {
+    width: 100px;
+    padding: 4px 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.capital-costs-table input:focus {
+    outline: none;
+    border-color: #667eea;
 }
