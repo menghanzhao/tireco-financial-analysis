@@ -397,7 +397,8 @@ class TireRecyclingAnalyzer {
 
         document.getElementById('annualThroughput').addEventListener('input', (e) => {
             this.annualThroughput = parseFloat(e.target.value) || 3000;
-            this.renderProductTable(); // Update product revenues
+            this.updateProductRevenues(); // Update product revenues
+            this.updateProductTotals();
             this.updateCostAnalysis();
             this.renderCharts();
         });
@@ -1374,6 +1375,7 @@ class TireRecyclingAnalyzer {
         const product = this.products.find(p => p.id === productId);
         if (product) {
             product.yield = parseFloat(newYield) || 0;
+            this.updateProductRevenues(); // Update only revenue values
             this.updateProductTotals();
             this.updateCostAnalysis();
             this.renderCharts();
@@ -1384,10 +1386,26 @@ class TireRecyclingAnalyzer {
         const product = this.products.find(p => p.id === productId);
         if (product) {
             product.price = parseFloat(newPrice) || 0;
+            this.updateProductRevenues(); // Update only revenue values
             this.updateProductTotals();
             this.updateCostAnalysis();
             this.renderCharts();
         }
+    }
+
+    updateProductRevenues() {
+        const tbody = document.getElementById('productTableBody');
+        const rows = tbody.querySelectorAll('tr');
+        const annualTonnageInput = this.annualThroughput * this.tireWeight;
+        
+        this.products.forEach((product, index) => {
+            if (rows[index]) {
+                const productOutput = annualTonnageInput * (product.yield / 100);
+                const productRevenue = productOutput * product.price;
+                const revenueCell = rows[index].cells[3]; // Revenue is the 4th column (index 3)
+                revenueCell.textContent = `$${productRevenue.toLocaleString()}`;
+            }
+        });
     }
 
     showProductEditor(productId = null) {
@@ -1536,10 +1554,24 @@ class TireRecyclingAnalyzer {
             } else if (field === 'depreciationYears') {
                 item.depreciationYears = parseFloat(newValue) || 0;
             }
+            this.updateCapitalDepreciations(); // Update only depreciation values
             this.updateCapitalCostTotals();
             this.updateCostAnalysis();
             this.renderCharts();
         }
+    }
+
+    updateCapitalDepreciations() {
+        const tbody = document.getElementById('capitalCostsTableBody');
+        const rows = tbody.querySelectorAll('tr');
+        
+        this.capitalCosts.forEach((item, index) => {
+            if (rows[index]) {
+                const annualDepreciation = item.depreciationYears > 0 ? item.cost / item.depreciationYears : 0;
+                const depreciationCell = rows[index].cells[3]; // Annual Depreciation is the 4th column (index 3)
+                depreciationCell.textContent = `$${annualDepreciation.toLocaleString()}`;
+            }
+        });
     }
 
     showCapitalCostEditor(itemId = null) {
